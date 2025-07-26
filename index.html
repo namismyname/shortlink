@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkShrink - URL Shortener</title>
+    <title>LinkDecode - URL Decodeer</title>
     <style>
         * {
             margin: 0;
@@ -273,22 +273,22 @@
     <div class="container">
         <div id="main-content">
             <div class="logo">
-                <h1>LinkShrink</h1>
-                <p>Shorten your URLs instantly</p>
+                <h1>LinkDecode</h1>
+                <p>Decode your URLs instantly</p>
             </div>
 
             <form id="url-form">
                 <div class="form-group">
-                    <label for="url">Enter URL to shorten</label>
+                    <label for="url">Enter URL to decode</label>
                     <input type="url" id="url" placeholder="https://example.com" required>
                 </div>
-                <button type="submit" class="shorten-btn">Shorten URL</button>
+                <button type="submit" class="shorten-btn">Decode URL</button>
             </form>
 
             <div class="error" id="error-message"></div>
 
             <div class="result" id="result">
-                <h3>✨ Your shortened URL is ready!</h3>
+                <h3>✨ Your Decoded URL is ready!</h3>
                 <div class="short-url" id="short-url"></div>
                 <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Link</button>
                 <a href="#" class="visit-btn" id="visit-link" target="_blank">🔗 Visit Link</a>
