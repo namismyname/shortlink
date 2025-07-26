@@ -308,13 +308,30 @@
     </div>
 
     <script>
-        // In-memory storage shared across all users on this domain
-        const urlDatabase = JSON.parse(localStorage.getItem('urlDatabase') || '{}');
+        // Storage shared across all users on this domain
+        let urlDatabase = {};
         const currentDomain = window.location.hostname;
+
+        // Load database from localStorage
+        function loadDatabase() {
+            try {
+                const stored = localStorage.getItem(`urlDatabase_${currentDomain}`);
+                if (stored) {
+                    urlDatabase = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.log('Could not load database from localStorage');
+                urlDatabase = {};
+            }
+        }
 
         // Save database to localStorage whenever it changes
         function saveDatabase() {
-            localStorage.setItem('urlDatabase', JSON.stringify(urlDatabase));
+            try {
+                localStorage.setItem(`urlDatabase_${currentDomain}`, JSON.stringify(urlDatabase));
+            } catch (e) {
+                console.log('Could not save to localStorage');
+            }
         }
 
         // Generate random short code
@@ -378,9 +395,8 @@
             const shortCode = generateShortCode();
             const shortUrl = `${window.location.origin}/${shortCode}`;
             
-            // Store in database with domain isolation
-            const key = `${currentDomain}_${shortCode}`;
-            urlDatabase[key] = {
+            // Store in database
+            urlDatabase[shortCode] = {
                 originalUrl: originalUrl,
                 domain: currentDomain,
                 createdAt: new Date().toISOString(),
@@ -404,20 +420,19 @@
             const path = window.location.pathname;
             if (path.length > 1) {
                 const shortCode = path.substring(1);
-                const key = `${currentDomain}_${shortCode}`;
                 
-                if (urlDatabase[key]) {
+                if (urlDatabase[shortCode] && urlDatabase[shortCode].domain === currentDomain) {
                     // Show redirect page
                     document.getElementById('main-content').style.display = 'none';
                     document.getElementById('redirect-content').classList.add('show');
                     
                     // Increment click counter and save
-                    urlDatabase[key].clicks++;
+                    urlDatabase[shortCode].clicks++;
                     saveDatabase();
                     
                     // Redirect after 2 seconds
                     setTimeout(() => {
-                        window.location.href = urlDatabase[key].originalUrl;
+                        window.location.href = urlDatabase[shortCode].originalUrl;
                     }, 2000);
                 } else {
                     // Short URL not found or from different domain
