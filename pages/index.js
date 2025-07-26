@@ -10,7 +10,7 @@ export default function Home() {
     e.preventDefault();
     const id = nanoid(6);
     saveLink(id, originalUrl);
-    setShortUrl(\`\${window.location.origin}/\${id}\`);
+    setShortUrl(`${window.location.origin}/${id}`);
   };
 
   return (
