@@ -308,7 +308,7 @@
     </div>
 
     <script>
-        // Storage shared across all users on this domain
+        // Storage for analytics only (optional)
         let urlDatabase = {};
         const currentDomain = window.location.hostname;
 
@@ -320,25 +320,38 @@
                     urlDatabase = JSON.parse(stored);
                 }
             } catch (e) {
-                console.log('Could not load database from localStorage');
                 urlDatabase = {};
             }
         }
 
-        // Save database to localStorage whenever it changes
+        // Save database to localStorage
         function saveDatabase() {
             try {
                 localStorage.setItem(`urlDatabase_${currentDomain}`, JSON.stringify(urlDatabase));
             } catch (e) {
-                console.log('Could not save to localStorage');
+                // Ignore localStorage errors
             }
+        }
+
+        // Base64 encoding/decoding for URL safety
+        function encodeUrl(url) {
+            return btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function decodeUrl(encoded) {
+            // Add padding if needed
+            while (encoded.length % 4) {
+                encoded += '=';
+            }
+            encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+            return atob(encoded);
         }
 
         // Generate random short code
         function generateShortCode() {
             const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let result = '';
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 6; i++) {
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return result;
@@ -391,19 +404,18 @@
                 return;
             }
 
-            // Generate short code and create short URL
+            // Generate short code and encode URL
             const shortCode = generateShortCode();
-            const shortUrl = `${window.location.origin}/${shortCode}`;
+            const encodedUrl = encodeUrl(originalUrl);
+            const shortUrl = `${window.location.origin}/${shortCode}${encodedUrl}`;
             
-            // Store in database
+            // Store in database for analytics (optional)
             urlDatabase[shortCode] = {
                 originalUrl: originalUrl,
-                domain: currentDomain,
                 createdAt: new Date().toISOString(),
                 clicks: 0
             };
             
-            // Save to localStorage so anyone can access it
             saveDatabase();
 
             // Display result
@@ -419,25 +431,41 @@
         function handleRedirect() {
             const path = window.location.pathname;
             if (path.length > 1) {
-                const shortCode = path.substring(1);
-                
-                if (urlDatabase[shortCode] && urlDatabase[shortCode].domain === currentDomain) {
-                    // Show redirect page
-                    document.getElementById('main-content').style.display = 'none';
-                    document.getElementById('redirect-content').classList.add('show');
+                try {
+                    // Extract short code and encoded URL
+                    const pathWithoutSlash = path.substring(1);
                     
-                    // Increment click counter and save
-                    urlDatabase[shortCode].clicks++;
-                    saveDatabase();
-                    
-                    // Redirect after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = urlDatabase[shortCode].originalUrl;
-                    }, 2000);
-                } else {
-                    // Short URL not found or from different domain
-                    showError('This shortened URL was not found or is not accessible from this domain.');
+                    // The first 6 characters are the short code, rest is encoded URL
+                    if (pathWithoutSlash.length > 6) {
+                        const shortCode = pathWithoutSlash.substring(0, 6);
+                        const encodedUrl = pathWithoutSlash.substring(6);
+                        const originalUrl = decodeUrl(encodedUrl);
+                        
+                        // Validate the decoded URL
+                        if (isValidUrl(originalUrl)) {
+                            // Show redirect page
+                            document.getElementById('main-content').style.display = 'none';
+                            document.getElementById('redirect-content').classList.add('show');
+                            
+                            // Update analytics if exists
+                            if (urlDatabase[shortCode]) {
+                                urlDatabase[shortCode].clicks++;
+                                saveDatabase();
+                            }
+                            
+                            // Redirect after 2 seconds
+                            setTimeout(() => {
+                                window.location.href = originalUrl;
+                            }, 2000);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // Invalid encoded URL
                 }
+                
+                // Show error if we get here
+                showError('This shortened URL is invalid or corrupted.');
             }
         }
 
