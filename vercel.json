@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/:id",
-      "destination": "/[id]"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

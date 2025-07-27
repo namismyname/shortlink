@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkDecode - URL Decodeer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .shorten-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .shorten-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .shorten-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 24px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result h3 {
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .short-url {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-family: 'Monaco', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 16px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .visit-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .visit-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+        }
+
+        .stats h4 {
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .stats p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .redirect-page {
+            display: none;
+            text-align: center;
+        }
+
+        .redirect-page.show {
+            display: block;
+        }
+
+        .redirect-page h2 {
+            color: #374151;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .redirect-page p {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+            }
+            
+            .logo h1 {
+                font-size: 28px;
+            }
+            
+            .copy-btn, .visit-btn {
+                width: 100%;
+                margin-bottom: 8px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="main-content">
+            <div class="logo">
+                <h1>LinkDecode</h1>
+                <p>Decode your URLs instantly</p>
+            </div>
+
+            <form id="url-form">
+                <div class="form-group">
+                    <label for="url">Enter URL to decode</label>
+                    <input type="url" id="url" placeholder="https://example.com" required>
+                </div>
+                <button type="submit" class="shorten-btn">Decode URL</button>
+            </form>
+
+            <div class="error" id="error-message"></div>
+
+            <div class="result" id="result">
+                <h3>✨ Your Decoded URL is ready!</h3>
+                <div class="short-url" id="short-url"></div>
+                <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Link</button>
+                <a href="#" class="visit-btn" id="visit-link" target="_blank">🔗 Visit Link</a>
+            </div>
+
+            <div class="stats">
+                <h4>🚀 Fast & Secure</h4>
+                <p>Your links are protected and work only on this domain</p>
+            </div>
+        </div>
+
+        <div id="redirect-content" class="redirect-page">
+            <h2>🔄 Redirecting...</h2>
+            <div class="spinner"></div>
+            <p>Taking you to your destination</p>
+        </div>
+    </div>
+
+    <script>
+        // Storage for analytics only (optional)
+        let urlDatabase = {};
+        const currentDomain = window.location.hostname;
+
+        // Load database from localStorage
+        function loadDatabase() {
+            try {
+                const stored = localStorage.getItem(`urlDatabase_${currentDomain}`);
+                if (stored) {
+                    urlDatabase = JSON.parse(stored);
+                }
+            } catch (e) {
+                urlDatabase = {};
+            }
+        }
+
+        // Save database to localStorage
+        function saveDatabase() {
+            try {
+                localStorage.setItem(`urlDatabase_${currentDomain}`, JSON.stringify(urlDatabase));
+            } catch (e) {
+                // Ignore localStorage errors
+            }
+        }
+
+        // Base64 encoding/decoding for URL safety
+        function encodeUrl(url) {
+            return btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function decodeUrl(encoded) {
+            // Add padding if needed
+            while (encoded.length % 4) {
+                encoded += '=';
+            }
+            encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+            return atob(encoded);
+        }
+
+        // Generate random short code
+        function generateShortCode() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Validate URL
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            const shortUrl = document.getElementById('short-url').textContent;
+            navigator.clipboard.writeText(shortUrl).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#10b981';
+                }, 2000);
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Handle form submission
+        document.getElementById('url-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const urlInput = document.getElementById('url');
+            const originalUrl = urlInput.value.trim();
+            
+            if (!isValidUrl(originalUrl)) {
+                showError('Please enter a valid URL (must start with http:// or https://)');
+                return;
+            }
+
+            // Generate short code and encode URL
+            const shortCode = generateShortCode();
+            const encodedUrl = encodeUrl(originalUrl);
+            const shortUrl = `${window.location.origin}/${shortCode}${encodedUrl}`;
+            
+            // Store in database for analytics (optional)
+            urlDatabase[shortCode] = {
+                originalUrl: originalUrl,
+                createdAt: new Date().toISOString(),
+                clicks: 0
+            };
+            
+            saveDatabase();
+
+            // Display result
+            document.getElementById('short-url').textContent = shortUrl;
+            document.getElementById('visit-link').href = shortUrl;
+            document.getElementById('result').classList.add('show');
+            
+            // Clear input
+            urlInput.value = '';
+        });
+
+        // Handle redirect logic
+        function handleRedirect() {
+            const path = window.location.pathname;
+            if (path.length > 1) {
+                try {
+                    // Extract short code and encoded URL
+                    const pathWithoutSlash = path.substring(1);
+                    
+                    // The first 6 characters are the short code, rest is encoded URL
+                    if (pathWithoutSlash.length > 6) {
+                        const shortCode = pathWithoutSlash.substring(0, 6);
+                        const encodedUrl = pathWithoutSlash.substring(6);
+                        const originalUrl = decodeUrl(encodedUrl);
+                        
+                        // Validate the decoded URL
+                        if (isValidUrl(originalUrl)) {
+                            // Show redirect page
+                            document.getElementById('main-content').style.display = 'none';
+                            document.getElementById('redirect-content').classList.add('show');
+                            
+                            // Update analytics if exists
+                            if (urlDatabase[shortCode]) {
+                                urlDatabase[shortCode].clicks++;
+                                saveDatabase();
+                            }
+                            
+                            // Redirect after 2 seconds
+                            setTimeout(() => {
+                                window.location.href = originalUrl;
+                            }, 2000);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // Invalid encoded URL
+                }
+                
+                // Show error if we get here
+                showError('This shortened URL is invalid or corrupted.');
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if this is a redirect
+            if (window.location.pathname.length > 1) {
+                handleRedirect();
+            }
+
+
+        });
+
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
